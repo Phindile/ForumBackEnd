@@ -88,11 +88,6 @@ func (u *User) Update(userCollection []*User) (string, bool) {
 		return "Record does not exist", foundRec
 	}
 }
-
-
-   
-
-
 func (u *User) Delete(userCollection []*User) (string, bool) {
 	foundRec := false
 	index := -1

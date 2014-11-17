@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ant0ine/go-json-rest/rest"
 	"net/http"
+	"domain"
 )
 
 func main() {
@@ -11,24 +12,19 @@ func main() {
 		EnableRelaxedContentType: true,
 	}
 	handler.SetRoutes(
-		&rest.Route{"GET", "/countries", GetAllCountries},
-		&rest.Route{"POST", "/countries", PostCountry},
-		&rest.Route{"GET", "/countries/:code", GetCountry},
-		&rest.Route{"DELETE", "/countries/:code", DeleteCountry},
+		&rest.Route{"GET", "/topics", GetAllTopics},
+		&rest.Route{"POST", "/topics", PostTopic},
+		&rest.Route{"GET", "/topics/:TopocID", GetTopic},
+		&rest.Route{"DELETE", "/topics/:TopocID", DeleteTopic},
 	)
 	http.ListenAndServe(":3000", &handler)
 }
 
-type Country struct {
-	Code string
-	Name string
-}
+var mytopic= map[string]*domain.Topic{}
 
-var store = map[string]*Country{}
-
-func GetCountry(w rest.ResponseWriter, r *rest.Request) {
-	code := r.PathParam("code")
-	country := store[code]
+func GetTopic(w rest.ResponseWriter, r *rest.Request) {
+	topicid := r.PathParam("TopicID")
+	country := mytopic[topicid]
 	if country == nil {
 		rest.NotFound(w, r)
 		return
@@ -36,36 +32,44 @@ func GetCountry(w rest.ResponseWriter, r *rest.Request) {
 	w.WriteJson(&country)
 }
 
-func GetAllCountries(w rest.ResponseWriter, r *rest.Request) {
-	countries := make([]*Country, len(store))
+func GetAllTopics(w rest.ResponseWriter, r *rest.Request) {
+	topics := make([]*domain.Topic, len(mytopic))
 	i := 0
-	for _, country := range store {
-		countries[i] = country
+	for _, topic := range mytopic {
+		topics[i] = topic
 		i++
 	}
-	w.WriteJson(&countries)
+	w.WriteJson(&topics)
 }
 
-func PostCountry(w rest.ResponseWriter, r *rest.Request) {
-	country := Country{}
-	err := r.DecodeJsonPayload(&country)
+func PostTopic(w rest.ResponseWriter, r *rest.Request) {
+	topic := domain.Topic{}
+	err := r.DecodeJsonPayload(&topic)
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if country.Code == "" {
-		rest.Error(w, "country code required", 400)
+	if topic.TopicID == "" {
+		rest.Error(w, "TopicID is required", 400)
 		return
 	}
-	if country.Name == "" {
-		rest.Error(w, "country name required", 400)
+	if topic.Title== "" {
+		rest.Error(w, "Topic Title is required", 400)
 		return
 	}
-	store[country.Code] = &country
-	w.WriteJson(&country)
+	if topic.Description== "" {
+		rest.Error(w, "Description is required", 400)
+		return
+	}
+	if topic.DatePosted== "" {
+		rest.Error(w, "DatePosted is required", 400)
+		return
+	}
+	mytopic[topic.TopicID] = &topic
+	w.WriteJson(&topic)
 }
 
-func DeleteCountry(w rest.ResponseWriter, r *rest.Request) {
-	code := r.PathParam("code")
-	delete(store, code)
+func DeleteTopic(w rest.ResponseWriter, r *rest.Request) {
+	topicid := r.PathParam("TopicID")
+	delete(mytopic,topicid)
 }
